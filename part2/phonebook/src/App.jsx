@@ -5,6 +5,7 @@ import Filter from "../components/Filter";
 
 import personServices from './services/persons'
 import axios from "axios";
+import Notification from "../components/Notification";
 
 const App = () => {
   console.log('App started...');
@@ -13,6 +14,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newValue, setNewValue] = useState('')
+  const [message, setMessage] = useState(null)
 
   useEffect(() => {
     console.log('effect...')
@@ -40,6 +42,13 @@ const App = () => {
           .then(response => {
             console.log('updating person with', response.data)
             setPersons(persons.map(person => person.id !== personFound.id ? person : response.data))
+
+            setMessage(`Updated ${updatedPerson.name}'s number`)
+            notificationTimeout()
+          })
+          .catch(error => {
+            setMessage(`Could not update ${updatedPerson.name}'s number!`)
+            notificationTimeout()
           })
         setNewName('')
         setNewNumber('')
@@ -58,6 +67,12 @@ const App = () => {
       .then(respone => {
         // console.log(respone.data)
         setPersons(persons.concat(respone.data))
+        setMessage(`Added ${newPerson.name}`)
+        notificationTimeout()
+      })
+      .catch(error => {
+        setMessage("Something went wrong while saving the new person!")
+        notificationTimeout()
       })
 
     setNewName('')
@@ -87,6 +102,12 @@ const App = () => {
       .deletePerson(id)
       .then(response => {
         console.log('delete response', response.status)
+        setMessage(`Deleted ${deletingPerson.name}`)
+        notificationTimeout()
+      })
+      .catch(error => {
+        setMessage(`Information of ${deletingPerson.name} has already been removed from server`)
+        notificationTimeout()
       })
       setPersons(persons.filter(person => person.id !== id))
     }
@@ -94,15 +115,22 @@ const App = () => {
     return
   }
 
+  const notificationTimeout = () => {
+    setTimeout(() => {
+      setMessage(null)
+    }, 5000)
+  }
+
   const filteredPersons = newValue
     ? persons.filter(person => person.name.toLowerCase().includes(newValue.toLowerCase()))
     : persons
-
 
   return (
     <div>
 
       <h2>Phonebook</h2>
+
+      <Notification message={message} />
 
       <Filter value={newValue} onChange={handleFilterChange} />
 
